@@ -1,0 +1,79 @@
+LIBRARY ieee;
+	USE ieee.std_logic_1164.all;
+------------------------------------------------------------------------
+ENTITY ADD_ACC_A IS
+	PORT	(		clk					: 	IN 	 STD_LOGIC;
+					rst					:	IN	    STD_LOGIC;
+					strobe            :  IN     STD_LOGIC;
+					selop					: 	OUT 	 STD_LOGIC_VECTOR(2 DOWNTO 0);
+					enaf					:  OUT	 STD_LOGIC;
+					shamt             :  OUT    STD_LOGIC_VECTOR(1 DOWNTO 0);
+					busB_addr         :  OUT    STD_LOGIC_VECTOR(2 DOWNTO 0);
+					busC_addr         :  OUT    STD_LOGIC_VECTOR(2 DOWNTO 0);
+					bank_wr_en        :  OUT    STD_LOGIC;
+					mar_en            :  OUT    STD_LOGIC;
+					ir_en             :  OUT    STD_LOGIC;
+					mdr_en            :  OUT    STD_LOGIC;
+					mdr_alu_en        :  OUT    STD_LOGIC;
+					wr_rdn            :  OUT    STD_LOGIC);				
+END ENTITY ADD_ACC_A;
+-------------------------------------------------------------------------
+ARCHITECTURE fsmd OF ADD_ACC_A IS
+	TYPE state IS (idle, STATE_1);
+	SIGNAL 	pr_state	: 	state;
+	SIGNAL 	nx_state	: 	state;
+BEGIN
+	--===========================================
+	--              FSM
+	--===========================================
+	-- Sequential Section ----------------------
+	seq_fsm: PROCESS(clk, rst)
+	BEGIN
+		IF (rst = '1') THEN
+			pr_state <=idle;
+		ELSIF(rising_edge(clk)) THEN
+			pr_state <= nx_state;
+		END IF;
+	END PROCESS;
+	
+	-- Combinational Section ----------------------
+	comb_fsm: PROCESS (pr_state, strobe)
+	BEGIN
+		
+		CASE pr_state IS
+		WHEN idle  =>
+				enaf              <= '0';
+				selop				  	<= "000";
+				shamt             <= "00";
+				busB_addr         <= "000";
+				busC_addr         <= "000";
+				bank_wr_en        <= '0';
+				mar_en            <= '0';
+				ir_en             <= '0';
+				mdr_en            <= '0';
+				mdr_alu_en        <= '0';
+				wr_rdn            <= '0';
+				IF (strobe = '1') THEN
+					nx_state	<= STATE_1;
+				ELSE
+					nx_state	<= idle;
+				END IF;
+				
+			WHEN STATE_1 =>
+				enaf              <= '1';
+				selop				  	<= "101";
+				shamt             <= "00";
+				busB_addr         <= "011";
+				busC_addr         <= "111";
+				bank_wr_en        <= '1';
+				mar_en            <= '0';
+				ir_en             <= '0';
+				mdr_en            <= '0';
+				mdr_alu_en        <= '0';
+				wr_rdn            <= '0';
+				nx_state				<= idle;
+			---------------------------
+
+		END CASE;
+	END PROCESS;
+END ARCHITECTURE fsmd; 
